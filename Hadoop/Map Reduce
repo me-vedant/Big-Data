@@ -1,0 +1,96 @@
+#==============================
+POM FILE CONFIGS
+
++================================
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.example</groupId>
+    <artifactId>word_count_new</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>apache</id>
+            <url>http://maven.apache.org</url>
+        </repository>
+    </repositories>
+    <dependencies>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-common -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-core -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-core</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+    </dependencies>
+
+</project>
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++
+MY MAPPER
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.tools.ant.Project;
+
+import javax.naming.Context;
+import java.io.IOException;
+
+public class MyMapper extends Mapper<LongWritable, Text,Text,LongWritable>
+{
+    protected void map(LongWritable key, Text value, Context context)  throws IOException, InterruptedException
+    {
+        String line = value.toString();
+        String[] words = line.split(" ");
+        for (String word:words)
+            context.write(new Text(word),new LongWritable(1));
+    }
+}
+
+==============================================================================
+REDUCER
+
+
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.w3c.dom.Text;
+
+import java.io.IOException;
+
+public class MyReducer extends Reducer <Text, LongWritable, Text,LongWritable>{
+    public void reduce(Text key, Iterable<LongWritable> values, Context context ) throws IOException,InterruptedException
+    {
+        long sum = 0;
+        for(LongWritable value :values)
+        {
+            sum = sum + value.get();
+        }
+        context.write(key, new LongWritable(sum));
+    }
+    
+}
+
+==============
+My DRIVER
+
+=========
+main 
+
