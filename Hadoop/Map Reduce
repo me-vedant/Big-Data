@@ -47,49 +47,108 @@ POM FILE CONFIGS
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 MY MAPPER
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.tools.ant.Project;
-
-import javax.naming.Context;
+import org.apache.hadoop.io.Text;
 import java.io.IOException;
 
 public class MyMapper extends Mapper<LongWritable, Text,Text,LongWritable>
 {
-    protected void map(LongWritable key, Text value, Context context)  throws IOException, InterruptedException
+    @Override
+    protected void map(LongWritable key, Text value, Context context)
+            throws IOException, InterruptedException
     {
         String line = value.toString();
         String[] words = line.split(" ");
-        for (String word:words)
-            context.write(new Text(word),new LongWritable(1));
+        for (String word : words)
+        {
+            context.write(new Text(word), new LongWritable(1));
+
+        }
     }
 }
+
+
 
 ==============================================================================
 REDUCER
 
 
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.w3c.dom.Text;
-
 import java.io.IOException;
 
-public class MyReducer extends Reducer <Text, LongWritable, Text,LongWritable>{
-    public void reduce(Text key, Iterable<LongWritable> values, Context context ) throws IOException,InterruptedException
-    {
-        long sum = 0;
-        for(LongWritable value :values)
+public class MyReducer extends Reducer<Text, LongWritable,Text,LongWritable>{
+    @Override
+    protected void reduce(Text key, Iterable<LongWritable> values,Context context)
+            throws IOException, InterruptedException {
+        long sum=0;
+        for(LongWritable value:values)
         {
-            sum = sum + value.get();
+            sum=sum+value.get();
         }
         context.write(key, new LongWritable(sum));
+
     }
-    
 }
 
 ==============
 My DRIVER
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
+
+public class MyDriver implements Tool {
+
+    private Configuration conf;
+
+    public Configuration getConf() {
+        return conf;
+    }
+
+    public void setConf(Configuration conf) {
+        this.conf = conf;
+    }
+
+    public int run(String[] args) throws Exception{
+        Job job = new Job(getConf());
+        job.setJobName("Word Count");
+        job.setJarByClass(this.getClass());
+
+        job.setMapperClass(MyMapper.class);
+        job.setReducerClass(MyReducer.class);
+
+        job.setMapOutputKeyClass(Text.class);
+        job.setMapOutputValueClass(LongWritable.class);
+
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(LongWritable.class);
+
+        job.setInputFormatClass(TextInputFormat.class);
+        job.setOutputFormatClass(TextOutputFormat.class);
+
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+        return job.waitForCompletion(true)? 0:-1;
+    }
+
+    public static void main(String[] args) throws Exception
+    {
+        int status = ToolRunner.run(new Configuration(), new MyDriver(), args);
+        System.out.println("My Status:" +status);
+    }
+}
 
 =========
 main 
