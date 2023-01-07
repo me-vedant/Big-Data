@@ -1,0 +1,15 @@
+hduser@hduser-VirtualBox:~$ hdfs dfs -put '/home/hduser/Downloads/sharedfolder/u.data' /u
+
+sudo spark-shell
+val a = sc.textFile("/home/hduser/Desktop/UntitledDocument")
+val movie = sc.textFile("hdfs://localhost:54310/u")
+movie.toDF()
+val moviedf = movie.toDF()
+moviedf.show()
+val msplit= movie.map(x => x.split("\t"))
+val c = msplit.map(x => (x(0),x(1),x(2),x(3)))
+c.toDF.show()
+val movie = c.toDF()
+movie.toDF.createTempView("movieTable")
+spark.sql("select _1 as uid,_2 as mid,_3 as rating,_4 as ticketid from moviesTable").createTempView("mratTable")
+spark.sql("select * from mratTable where rating >  (select avg(rating) from mratTable)").show()
