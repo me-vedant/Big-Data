@@ -1,0 +1,49 @@
+QUESTION : LOAD DATA FROM MYSQL TO HIVE. 
+==============================
+open hive
+create a empty  table with same schema as data 
+hive> create table emp1000(id int, name string, sal int)
+    > row format delimited
+    > fields terminated by ',';
+close hive  by ctrl+c since it will show error.
+==============================
+
+open mysql 
+create  new table:
+
+mysql> create table emp1001(id int, name varchar(100),sal int);
+mysql> load data local infile '/home/admin1/Desktop/emp.txt' into table emp1001 fields terminated by ',';
+
+check if the data loaded has been loaded by this cmd:
+
+mysql> select * from emp1001;
++------+-------+-------+
+| id   | name  | sal   |
++------+-------+-------+
+|  101 | john  | 15000 |
+|  102 | smith | 20000 |
+|  103 | smita | 25000 |
++------+-------+-------+
+3 rows in set (0.00 sec)
+
+
+===============
+open another terminal and run this 
+** this will load table from mysql into hive directly 
+admin1@admin1:~$ sqoop import --connect jdbc:mysql://localhost/stud --username root --password password --table emp1001 --hive-import --hive-table mydb1.emp1000 --m 1 --fields-terminated-by ',';
+====================
+open hive 
+admin1@admin1:~$ hive
+hive> show databases;
+hive> use mydb1;
+** check the data loaded  from mysql table into hive table.
+
+hive> select * from emp1000;
+hive> select * from emp1000;
+OK
+101	john	15000
+102	smith	20000
+103	smita	25000
+Time taken: 0.999 seconds, Fetched: 3 row(s)
+
+DONE.
